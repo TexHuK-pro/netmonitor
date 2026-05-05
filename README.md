@@ -17,40 +17,37 @@
 
 ## 🏗 Архитектура приложения
 
+## 🏗 Архитектура приложения
+
 ```mermaid
 flowchart TD
-    subgraph Frontend["🎨 Frontend (HTML/CSS/JS)"]
+    subgraph Frontend["Frontend HTML/CSS/JS"]
         UI[frontend/index.html]
         JS[JavaScript Logic]
         UI -->|User Actions| JS
-        JS -->|window.go.main.App.*| Bridge
+        JS -->|window.go.main.App| Bridge
     end
 
-    subgraph Bridge["🔗 Wails Bridge"]
-        Bridge[Автоматическая конвертация<br/>JavaScript ↔ Go]
+    subgraph Bridge["Wails Bridge"]
+        Bridge[JavaScript to Go]
     end
 
-    subgraph Backend["⚙️ Backend (Go)"]
-        App[main.go: App Struct]
-        Logic[Бизнес-логика]
+    subgraph Backend["Backend Go"]
+        App[main.go App Struct]
+        Logic[Business Logic]
         Net[net.DialTimeout]
-        FS[Файловая система]
+        FS[File System]
         
         Bridge -->|Method Calls| App
         App --> Logic
-        Logic -->|Проверка хоста| Net
-        Logic -->|Save/Load Config| FS
+        Logic -->|Check Host| Net
+        Logic -->|Save/Load| FS
     end
 
-    subgraph Data["💾 Данные"]
+    subgraph Data["Data"]
         Config[config.json]
         FS <-->|JSON| Config
     end
-
-    style Frontend fill:#e1f5fe,stroke:#01579b
-    style Backend fill:#e8f5e9,stroke:#2e7d32
-    style Bridge fill:#fff3e0,stroke:#ef6c00
-
 
 ## 🔄 1. Полный цикл работы (пошагово)
 
