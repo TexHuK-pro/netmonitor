@@ -1,0 +1,22 @@
+# Скомпилированные файлы
+*.exe
+build/
+bin/
+dist/
+
+# Зависимости
+node_modules/
+vendor/
+
+# Временные файлы
+*.log
+*.tmp
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Go
+go.sum

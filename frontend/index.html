@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Monitor</title>
+    
+    <!-- ===================================================================
+         СТИЛИ (CSS) — отвечают за внешний вид приложения
+         =================================================================== -->
+    <style>
+        /* Сброс стандартных отступов браузера */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        /* Основной фон страницы */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;           /* Светло-серый фон */
+            padding: 20px;                  /* Отступы по краям */
+            color: #333;                    /* Тёмно-серый текст */
+        }
+        
+        /* Панель ввода (поля + кнопка "Добавить") */
+        .input-panel {
+            background: white;              /* Белый фон */
+            padding: 20px;                  /* Внутренние отступы */
+            border-radius: 8px;             /* Скруглённые углы */
+            margin-bottom: 20px;            /* Отступ снизу */
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Лёгкая тень */
+            display: flex;                  /* Flexbox для горизонтального расположения */
+            gap: 10px;                      /* Расстояние между элементами */
+            align-items: center;            /* Выравнивание по центру по вертикали */
+        }
+        
+        /* Поля ввода */
+        input {
+            padding: 10px 15px;             /* Внутренние отступы */
+            border: 1px solid #ddd;         /* Светло-серая рамка */
+            border-radius: 4px;             /* Скруглённые углы */
+            font-size: 14px;                /* Размер шрифта */
+            flex: 1;                        /* Занимают всё доступное место */
+            outline: none;                  /* Убираем синюю рамку при фокусе */
+        }
+        
+        /* Поле ввода при нажатии (фокусе) */
+        input:focus {
+            border-color: #4CAF50;          /* Зелёная рамка */
+        }
+        
+        /* Кнопки (и "Добавить", и "Удалить") */
+        button {
+            padding: 10px 20px;             /* Внутренние отступы */
+            background: #4CAF50;            /* Зелёный фон */
+            color: white;                   /* Белый текст */
+            border: none;                   /* Без рамки */
+            border-radius: 4px;             /* Скруглённые углы */
+            cursor: pointer;                /* Курсор-рука при наведении */
+            font-size: 14px;                /* Размер шрифта */
+            transition: background 0.2s;    /* Плавное изменение фона */
+        }
+        
+        /* Кнопка при наведении */
+        button:hover {
+            background: #45a049;            /* Чуть темнее */
+        }
+        
+        /* Элемент списка хостов (одна строка) */
+        .host-item {
+            background: white;              /* Белый фон */
+            padding: 15px 20px;             /* Внутренние отступы */
+            margin-bottom: 10px;            /* Отступ снизу */
+            border-radius: 8px;             /* Скруглённые углы */
+            display: flex;                  /* Flexbox для горизонтального расположения */
+            align-items: center;            /* Выравнивание по центру */
+            gap: 20px;                      /* Расстояние между элементами */
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Лёгкая тень */
+        }
+        
+        /* Название хоста (например, "Google DNS") */
+        .host-name {
+            font-weight: 600;               /* Полужирный шрифт */
+            min-width: 150px;               /* Минимальная ширина */
+        }
+        
+        /* Адрес хоста (например, "8.8.8.8:53") */
+        .host-addr {
+            color: #666;                    /* Серый цвет */
+            min-width: 200px;               /* Минимальная ширина */
+            font-family: monospace;         /* Моноширинный шрифт (как в консоли) */
+        }
+        
+        /* Статус (цветной блок с временем) */
+        .host-status {
+            padding: 8px 30px;              /* Внутренние отступы */
+            border-radius: 4px;             /* Скруглённые углы */
+            font-weight: bold;              /* Жирный шрифт */
+            text-align: center;             /* Текст по центру */
+            min-width: 120px;               /* Минимальная ширина */
+            color: black;                   /* Чёрный текст */
+            transition: background 0.3s;    /* Плавное изменение фона */
+        }
+        
+        /* Зелёный статус (хост доступен) */
+        .status-ok {
+            background: #90EE90;            /* Светло-зелёный */
+        }
+        
+        /* Красный статус (хост недоступен) */
+        .status-error {
+            background: #FF7878;            /* Красный */
+        }
+        
+        /* Серый статус (идёт проверка) */
+        .status-checking {
+            background: #B4B4B4;            /* Серый */
+        }
+        
+        /* Кнопка "Удалить" */
+        .delete-btn {
+            background: #f44336;            /* Красный фон */
+            padding: 8px 15px;              /* Внутренние отступы */
+            margin-left: auto;              /* Прижимает кнопку вправо */
+        }
+        
+        /* Кнопка "Удалить" при наведении */
+        .delete-btn:hover {
+            background: #da190b;            /* Темно-красный */
+        }
+    </style>
+</head>
+<body>
+    <!-- =================================================================
+         HTML-СТРУКТУРА — каркас приложения
+         ================================================================= -->
+    
+    <!-- Панель ввода: два поля + кнопка "Добавить" -->
+    <div class="input-panel">
+        <!-- Поле для названия хоста -->
+        <input 
+            type="text" 
+            id="nameInput" 
+            placeholder="Название (напр. DC-01)"
+        >
+        
+        <!-- Поле для адреса (IP:порт) -->
+        <input 
+            type="text" 
+            id="addrInput" 
+            placeholder="IP:порт (напр. 192.168.1.1:80)"
+        >
+        
+        <!-- Кнопка добавления -->
+        <button onclick="addHost()">➕ Добавить</button>
+    </div>
+    
+    <!-- Контейнер для списка хостов (сюда JavaScript будет добавлять строки) -->
+    <div id="hostsList"></div>
+
+    <!-- =================================================================
+         JAVASCRIPT — логика взаимодействия с бэкендом (Go)
+         ================================================================= -->
+    <script>
+        // =================================================================
+        // АВТОМАТИЧЕСКОЕ ОБНОВЛЕНИЕ ИНТЕРФЕЙСА
+        // =================================================================
+        
+        let updateInterval; // Переменная для хранения ID таймера
+        
+        // Запускает авто-обновление каждые 2 секунды
+        function startAutoUpdate() {
+            loadHosts(); // Обновляем сразу при загрузке
+            
+            // Затем каждые 2000 мс (2 секунды)
+            updateInterval = setInterval(loadHosts, 2000);
+        }
+        
+        // =================================================================
+        // РАБОТА С БЭКЕНДОМ (Go)
+        // =================================================================
+        
+        // Загружает список хостов из Go и обновляет интерфейс
+        async function loadHosts() {
+            try {
+                // === ВЫЗОВ GO-МЕТОДА ===
+                // window.go.main.App.GetHosts() — это мост между JS и Go
+                // Wails автоматически создаёт этот объект
+                // Вызывает метод GetHosts() структуры App в main.go
+                const hosts = await window.go.main.App.GetHosts();
+                
+                // Отрисовываем полученный список
+                renderHosts(hosts);
+            } catch (error) {
+                console.error('Ошибка загрузки хостов:', error);
+            }
+        }
+        
+        // =================================================================
+        // ОТРИСОВКА ИНТЕРФЕЙСА
+        // =================================================================
+        
+        // Преобразует данные из Go в HTML-элементы
+        function renderHosts(hosts) {
+            const container = document.getElementById('hostsList');
+            container.innerHTML = ''; // Очищаем текущий список
+
+            // Для каждого хоста создаём HTML-элемент
+            hosts.forEach(host => {
+                const div = document.createElement('div');
+                div.className = 'host-item'; // Применяем CSS-класс
+                
+                // Определяем CSS-класс для цвета статуса
+                let statusClass = 'status-checking'; // По умолчанию серый
+                if (host.status === 'ok') statusClass = 'status-ok';     // Зелёный
+                if (host.status === 'error') statusClass = 'status-error'; // Красный
+
+                // Создаём HTML-разметку строки
+                div.innerHTML = `
+                    <div class="host-name">${host.name}</div>
+                    <div class="host-addr">${host.addr}</div>
+                    <div class="host-status ${statusClass}">
+                        ${host.latency || '⏳'}
+                    </div>
+                    <button class="delete-btn" onclick="deleteHost(${host.id})">
+                        🗑 Удалить
+                    </button>
+                `;
+                
+                // Добавляем строку в контейнер
+                container.appendChild(div);
+            });
+        }
+        
+        // =================================================================
+        // ДОБАВЛЕНИЕ ХОСТА
+        // =================================================================
+        
+        // Вызывается при нажатии кнопки "Добавить"
+        async function addHost() {
+            // Получаем значения из полей ввода
+            const name = document.getElementById('nameInput').value.trim();
+            const addr = document.getElementById('addrInput').value.trim();
+            
+            // Проверяем, что поля не пустые
+            if (name && addr) {
+                // === ВЫЗОВ GO-МЕТОДА ===
+                // Вызывает метод AddHost(name, addr) в main.go
+                await window.go.main.App.AddHost(name, addr);
+                
+                // Очищаем поля ввода
+                document.getElementById('nameInput').value = '';
+                document.getElementById('addrInput').value = '';
+                
+                // Сразу обновляем интерфейс (не ждём 2 секунды)
+                await loadHosts();
+            }
+        }
+        
+        // =================================================================
+        // УДАЛЕНИЕ ХОСТА
+        // =================================================================
+        
+        // Вызывается при нажатии кнопки "Удалить"
+        // id — уникальный номер хоста, который мы передали в onclick
+        async function deleteHost(id) {
+            // === ВЫЗОВ GO-МЕТОДА ===
+            // Вызывает метод RemoveHost(id) в main.go
+            await window.go.main.App.RemoveHost(id);
+            
+            // Сразу обновляем интерфейс
+            await loadHosts();
+        }
+        
+        // =================================================================
+        // ЗАПУСК ПРИЛОЖЕНИЯ
+        // =================================================================
+        
+        // Когда страница полностью загрузилась
+        document.addEventListener('DOMContentLoaded', startAutoUpdate);
+        
+        // Для Wails (если событие DOMContentLoaded не сработало)
+        window.addEventListener('wails:loaded', startAutoUpdate);
+        
+        // Запускаем сразу на всякий случай
+        startAutoUpdate();
+    </script>
+</body>
+</html>
