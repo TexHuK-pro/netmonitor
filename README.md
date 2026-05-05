@@ -15,40 +15,6 @@
 
 ---
 
-## 🏗 Архитектура приложения
-
-## 🏗 Архитектура приложения
-
-```mermaid
-flowchart TD
-    subgraph Frontend["Frontend HTML/CSS/JS"]
-        UI[frontend/index.html]
-        JS[JavaScript Logic]
-        UI -->|User Actions| JS
-        JS -->|window.go.main.App| Bridge
-    end
-
-    subgraph Bridge["Wails Bridge"]
-        Bridge[JavaScript to Go]
-    end
-
-    subgraph Backend["Backend Go"]
-        App[main.go App Struct]
-        Logic[Business Logic]
-        Net[net.DialTimeout]
-        FS[File System]
-        
-        Bridge -->|Method Calls| App
-        App --> Logic
-        Logic -->|Check Host| Net
-        Logic -->|Save/Load| FS
-    end
-
-    subgraph Data["Data"]
-        Config[config.json]
-        FS <-->|JSON| Config
-    end
-
 ## 🔄 1. Полный цикл работы (пошагово)
 
 ### 🔹 Сценарий 1: Добавление хоста
@@ -120,3 +86,9 @@ flowchart TD
 | `window.go.main.App.GetHosts()`           | `func (a *App) GetHosts() []HostEntry`               | Получить список  |
 | `setInterval(loadHosts, 2000)`            | `go checkHost(id)` (каждые 3 сек)                    | Авто-обновление  |
 | `JSON: {id, name, addr, status, latency}` | `struct HostEntry {ID, Name, Addr, Status, Latency}` | Структура данных |
+
+# Обычная сборка
+wails build
+
+# ИЛИ сборка с оптимизацией (меньший размер .exe)
+wails build -ldflags="-s -w"
